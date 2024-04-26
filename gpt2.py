@@ -80,7 +80,7 @@ class Embedding:
         return self.weight[x]
 
 
-def GELU(x):
+def gelu(x):
     a = np.tanh(np.sqrt(2.0 / np.pi) * (x + 0.044715 * np.power(x, 3.0)))
     return 0.5 * x * (1.0 + a)
 
@@ -142,7 +142,7 @@ class Block:
         self.attn = SelfAttention(weights["attn"], n_heads=n_heads, mask=mask)
         self.mlp_c_fc = Linear(weights["mlp"]["c_fc"])
         self.mlp_c_proj = Linear(weights["mlp"]["c_proj"])
-        self.mlpf = lambda x: self.mlp_c_proj(GELU(self.mlp_c_fc(x)))
+        self.mlpf = lambda x: self.mlp_c_proj(gelu(self.mlp_c_fc(x)))
 
     def __call__(self, x, increamental=0):
         x = x + self.attn(self.ln_1(x), increamental=increamental)
