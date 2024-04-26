@@ -97,9 +97,9 @@ def to_heads(x, n_heads):
 
 class SelfAttention:
     def __init__(self, weights: dict[str, Weights], n_heads, mask=None):
-        self.c_attn_weight = weights["c_attn"]
-        self.c_proj_weight = weights["c_proj"]
-        n_embd = self.c_attn_weight.W.shape[1] // 3
+        self.c_attn = Linear(weights["c_attn"])
+        self.c_proj = Linear(weights["c_proj"])
+        n_embd = self.c_attn.weight.W.shape[1] // 3
         self.num_heads = n_heads
         self.head_dim = n_embd // n_heads
         self.mask = mask
@@ -107,10 +107,8 @@ class SelfAttention:
         self.v_cache = None
 
     def __call__(self, x, increamental=0):
-        W1, b1 = self.c_attn_weight
-        W2, b2 = self.c_proj_weight
         # x: [batch_size, seq_len, n_embd]
-        y = (x @ W1) + b1
+        y = self.c_attn(x)
         # y: [batch_size, seq_len, n_embd*3]
         batch_size, seq_len = y.shape[:2]
         q, k, v = np.split(y, 3, axis=2)
@@ -133,7 +131,7 @@ class SelfAttention:
         # y: [batch_size, num_heads, seq_len, head_dim]
         y = y.reshape(batch_size, y.shape[1], -1)
         # y: [batch_size, seq_len, n_embd]
-        y = (y @ W2) + b2
+        y = self.c_proj(y)
         return y
 
 
